@@ -1,5 +1,45 @@
 <script setup>
+import { ref } from 'vue'
 import HelloWorld from './components/HelloWorld.vue'
+import ItemList from './components/ItemList.vue'
+
+const items = ref([
+  { id: 1, title: 'Movie: The Matrix' },
+  { id: 2, title: 'Series: Dark' },
+])
+const error = ref(null)
+
+
+const loadFromBackend = async () => {
+  error.value = null
+  const endpoint = 'http://localhost:8080/api/watchlist';
+
+  const requestOptions = {
+    method: 'GET',
+    redirect: 'follow'
+  };
+
+  try {
+    const response = await fetch(endpoint, requestOptions);
+    if (!response.ok) {
+
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+
+    result.forEach(item => {
+      items.value.push(item);
+    });
+
+  } catch (err) {
+    console.error('error', err);
+    error.value = `Fehler beim Laden: ${err.message}`;
+  }
+}
+
+
 </script>
 
 <template>
@@ -12,6 +52,14 @@ import HelloWorld from './components/HelloWorld.vue'
     </a>
   </div>
   <HelloWorld msg="Vite + Vue" />
+
+  <main>
+    <h1>Watchlist - Frontend (Milestone 2)</h1>
+    <ItemList :items="items" />
+    <hr>
+    <button @click="loadFromBackend">Load from backend</button>
+    <p v-if="error" style="color:red">{{ error }}</p>
+  </main>
 </template>
 
 <style scoped>
@@ -28,47 +76,3 @@ import HelloWorld from './components/HelloWorld.vue'
   filter: drop-shadow(0 0 2em #42b883aa);
 }
 </style>
-
-<template>
-  <main>
-    <h1>Watchlist - Frontend (Milestone 2)</h1>
-    <!-- Übergibt items an Unterkomponente -->
-    <ItemList :items="items" />
-    <hr>
-    <button @click="loadFromBackend">Load from backend</button>
-    <p v-if="error" style="color:red">{{ error }}</p>
-  </main>
-</template>
-
-<script>
-import { ref } from 'vue'
-import ItemList from './components/ItemList.vue'
-
-export default {
-  components: { ItemList },
-  setup() {
-    const items = ref([
-
-      { id: 1, title: 'Movie: The Matrix' },
-      { id: 2, title: 'Series: Dark' },
-    ])
-    const error = ref(null)
-
-    async function loadFromBackend() {
-      error.value = null
-      try {
-        const res = await fetch('http://localhost:8080/api/watchlist')
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const data = await res.json()
-
-        items.value = data
-      } catch (e) {
-        error.value = 'Fehler beim Laden vom Backend: ' + e.message
-      }
-    }
-
-    return { items, loadFromBackend, error }
-  }
-}
-</script>
-
