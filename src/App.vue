@@ -3,6 +3,39 @@ import { ref } from 'vue'
 import HelloWorld from './components/HelloWorld.vue'
 import ItemList from './components/ItemList.vue'
 
+const newTitle = ref('')
+
+const saveToBackend = async () => {
+  error.value = null
+
+  const endpoint = 'http://localhost:8080/api/watchlist';
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        title: newTitle.value
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const savedItem = await response.json();
+
+    items.value.push(savedItem);
+    newTitle.value = '';
+
+  } catch (err) {
+    error.value = `Fehler beim Speichern: ${err.message}`;
+  }
+}
+
+
 const items = ref([
   { id: 1, title: 'Movie: The Matrix' },
   { id: 2, title: 'Series: Dark' },
@@ -12,7 +45,7 @@ const error = ref(null)
 
 const loadFromBackend = async () => {
   error.value = null
-  const endpoint = 'http://localhost:8080/api/watchlist';
+  const endpoint = 'https://watchlist-vuih.onrender.com/api/watchlist';
 
   const requestOptions = {
     method: 'GET',
@@ -52,6 +85,14 @@ const loadFromBackend = async () => {
     </a>
   </div>
   <HelloWorld msg="Vite + Vue" />
+  <input
+      v-model="newTitle"
+      placeholder="Neuen Eintrag eingeben"
+  />
+
+  <button @click="saveToBackend">
+    Speichern
+  </button>
 
   <main>
     <h1>Watchlist - Frontend (Milestone 2)</h1>
