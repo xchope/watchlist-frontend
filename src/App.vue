@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import ItemList from './components/ItemList.vue'
 import WatchItemForm from './components/WatchItemForm.vue'
 
@@ -8,6 +8,7 @@ const API_URL = 'https://watchlist-vuih.onrender.com'
 const items = ref([])
 const error = ref(null)
 const loading = ref(false)
+const showOnlyOpen = ref(false)   // Filter-Flag
 
 const loadFromBackend = async () => {
   error.value = null
@@ -66,6 +67,14 @@ const deleteItem = async (id) => {
   }
 }
 
+// computed für Filter: nur ungesehene, wenn Checkbox aktiv
+const filteredItems = computed(() => {
+  if (!showOnlyOpen.value) {
+    return items.value
+  }
+  return items.value.filter(item => !item.finished)
+})
+
 onMounted(() => {
   loadFromBackend()
 })
@@ -87,9 +96,15 @@ onMounted(() => {
       <section class="list-section">
         <div class="toolbar">
           <button @click="loadFromBackend">Neu laden</button>
+          <label class="filter">
+            <input type="checkbox" v-model="showOnlyOpen" />
+            Nur ungesehene anzeigen
+          </label>
           <span v-if="loading">Lade...</span>
         </div>
-        <ItemList :items="items" @delete-item="deleteItem" />
+
+
+        <ItemList :items="filteredItems" @delete-item="deleteItem" />
       </section>
 
       <p v-if="error" class="error">{{ error }}</p>
@@ -125,6 +140,13 @@ h1 {
   margin-bottom: 0.5rem;
 }
 
+.filter {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
 button {
   padding: 0.4rem 0.8rem;
   border-radius: 4px;
@@ -141,4 +163,3 @@ button:hover {
   font-weight: 500;
 }
 </style>
-
