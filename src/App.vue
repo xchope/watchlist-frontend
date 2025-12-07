@@ -1,35 +1,35 @@
 <script setup>
-import { ref } from 'vue'
-import HelloWorld from './components/HelloWorld.vue'
+import { ref, onMounted } from 'vue'
 import ItemList from './components/ItemList.vue'
+import WatchItemForm from './components/WatchItemForm.vue'
 
-// Immer das Render-Backend nutzen:
 const API_URL = 'https://watchlist-vuih.onrender.com'
 
 const items = ref([])
 const error = ref(null)
-const newTitle = ref('')
+const loading = ref(false)
 
-// GET
 const loadFromBackend = async () => {
   error.value = null
+  loading.value = true
   const endpoint = `${API_URL}/api/watchlist`
 
   try {
-    const response = await fetch(endpoint, { method: 'GET' })
+    const response = await fetch(endpoint)
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     const result = await response.json()
     items.value = result
   } catch (err) {
-    console.error('error', err)
+    console.error(err)
     error.value = `Fehler beim Laden: ${err.message}`
+  } finally {
+    loading.value = false
   }
 }
 
-// POST
-const saveToBackend = async () => {
+const saveToBackend = async (newItem) => {
   error.value = null
   const endpoint = `${API_URL}/api/watchlist`
 
@@ -37,44 +37,108 @@ const saveToBackend = async () => {
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: newTitle.value,
-        // Backend setzt type, finished, rating default
-      })
+      body: JSON.stringify(newItem)
     })
-
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
-
     const savedItem = await response.json()
     items.value.push(savedItem)
-    newTitle.value = ''
   } catch (err) {
-    console.error('error', err)
+    console.error(err)
     error.value = `Fehler beim Speichern: ${err.message}`
   }
 }
+
+const deleteItem = async (id) => {
+  error.value = null
+  const endpoint = `${API_URL}/api/watchlist/${id}`
+
+  try {
+    const response = await fetch(endpoint, { method: 'DELETE' })
+    if (!response.ok && response.status !== 204) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    items.value = items.value.filter(item => item.id !== id)
+  } catch (err) {
+    console.error(err)
+    error.value = `Fehler beim Löschen: ${err.message}`
+  }
+}
+
+onMounted(() => {
+  loadFromBackend()
+})
 </script>
 
 <template>
-  <HelloWorld msg="Vite + Vue" />
+  <div class="app">
+    <header>
+      <h1>Watchlist</h1>
+      <p>Verwalte deine Filme & Serien</p>
+    </header>
 
-  <section>
-    <input
-        v-model="newTitle"
-        placeholder="Neuen Eintrag eingeben"
-    />
-    <button @click="saveToBackend">
-      Speichern
-    </button>
-  </section>
+    <main>
+      <section class="form-section">
+        <h2>Neuen Eintrag hinzufügen</h2>
+        <WatchItemForm @save="saveToBackend" />
+      </section>
 
-  <main>
-    <h1>Watchlist - Frontend</h1>
-    <ItemList :items="items" />
-    <hr />
-    <button @click="loadFromBackend">Load from backend</button>
-    <p v-if="error" style="color:red">{{ error }}</p>
-  </main>
+      <section class="list-section">
+        <div class="toolbar">
+          <button @click="loadFromBackend">Neu laden</button>
+          <span v-if="loading">Lade...</span>
+        </div>
+        <ItemList :items="items" @delete-item="deleteItem" />
+      </section>
+
+      <p v-if="error" class="error">{{ error }}</p>
+    </main>
+  </div>
 </template>
+
+<style scoped>
+.app {
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: 1.5rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+h1 {
+  margin: 0;
+}
+
+.form-section, .list-section {
+  margin-bottom: 2rem;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+button {
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #f0f0f0;
+}
+
+.error {
+  color: #c00;
+  font-weight: 500;
+}
+</style>
+
