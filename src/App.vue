@@ -82,9 +82,12 @@ onMounted(() => {
 
 <template>
   <div class="app">
-    <header>
-      <h1>Watchlist</h1>
-      <p>Verwalte deine Filme & Serien</p>
+    <header class="header">
+      <div class="logo-circle">🎬</div>
+      <div>
+        <h1>Watchlist</h1>
+        <p>Verwalte deine Filme & Serien</p>
+      </div>
     </header>
 
     <main>
@@ -103,7 +106,6 @@ onMounted(() => {
           <span v-if="loading">Lade...</span>
         </div>
 
-
         <ItemList :items="filteredItems" @delete-item="deleteItem" />
       </section>
 
@@ -112,24 +114,53 @@ onMounted(() => {
   </div>
 </template>
 
+
 <style scoped>
-.app {
-  max-width: 900px;
-  margin: 0 auto;
+:global(body) {
+  margin: 0;
+  background: linear-gradient(135deg, #0f172a, #020617);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  padding: 1.5rem;
 }
 
-header {
-  text-align: center;
+.app {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 2rem 2.5rem;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   margin-bottom: 2rem;
+}
+
+.logo-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: #f9fafb;
 }
 
 h1 {
   margin: 0;
 }
 
-.form-section, .list-section {
+header p {
+  margin: 0.2rem 0 0;
+  color: #4b5563;
+}
+
+.form-section,
+.list-section {
   margin-bottom: 2rem;
 }
 
@@ -147,19 +178,23 @@ h1 {
   font-size: 0.9rem;
 }
 
+
 button {
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-  border: 1px solid #ccc;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: none;
   cursor: pointer;
+  background: #111827;
+  color: #f9fafb;
+  font-size: 0.9rem;
 }
 
 button:hover {
-  background: #f0f0f0;
+  background: #1f2937;
 }
 
 .error {
-  color: #c00;
+  color: #dc2626;
   font-weight: 500;
 }
 </style>
